@@ -34,7 +34,7 @@ function addGroup (group, organization) {
     groupObj.logo = group.organization.logo;
   }
 
-  groupList.push(immutable(groupObj));
+  groupList.push(groupObj);
 }
 
 /**

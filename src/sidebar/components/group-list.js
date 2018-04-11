@@ -3,6 +3,8 @@
 var { isThirdPartyUser } = require('../util/account-id');
 var isThirdPartyService = require('../util/is-third-party-service');
 var serviceConfig = require('../service-config');
+const memoize = require('../util/memoize');
+const sortedGroups = memoize(require('../util/group-organizations'));
 
 // @ngInject
 function GroupListController($window, analytics, groups, settings, serviceUrl) {
@@ -10,6 +12,22 @@ function GroupListController($window, analytics, groups, settings, serviceUrl) {
 
   this.createNewGroup = function() {
     $window.open(serviceUrl('groups.new'), '_blank');
+  };
+
+  this.focusedIcon = function() {
+    const focusedGroup = this.groups.focused();
+    if (!focusedGroup) {
+      return false;
+    }
+    return focusedGroup.organization.logo || this.thirdPartyGroupIcon;
+  };
+
+  this.focusedIconClass = function() {
+    const focusedGroup = this.groups.focused();
+    if (!focusedGroup) {
+      return false;
+    }
+    return (focusedGroup.type === 'open') ? 'public' : 'group';
   };
 
   this.isThirdPartyUser = function () {
@@ -24,6 +42,13 @@ function GroupListController($window, analytics, groups, settings, serviceUrl) {
       analytics.track(analytics.events.GROUP_LEAVE);
       groups.leave(groupId);
     }
+  };
+
+  this.sortedGroups = function () {
+    if (this.groups.all()) {
+      return sortedGroups(this.groups.all());
+    }
+    return [];
   };
 
   this.viewGroupActivity = function () {
