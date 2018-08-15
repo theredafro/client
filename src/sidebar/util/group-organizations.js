@@ -6,14 +6,34 @@ const immutable = require('seamless-immutable');
 const DEFAULT_ORG_ID = '__default__';
 
 /**
+ * Return the organization object for the group, or undefined.
+ *
+ * Expanded groups without an organization relation are returned by the
+ * API with their `organization` property set to `null`. Normalize that
+ * to `undefined` here or return the valid organization object.
+ *
+ * @param {Object} group
+ * @return {Object|undefined}
+ */
+function _fetchOrganization(group) {
+  if (group.organization && typeof group.organization === 'object') {
+    return group.organization;
+  }
+  return undefined;
+}
+
+/**
  * Generate consistent object keys for organizations so that they
  * may be sorted
  *
- * @param {Object} organization
+ * @param {Object|undefined} organization
  * @return {String}
  */
 function orgKey (organization) {
-  if (organization.id === DEFAULT_ORG_ID) {  return DEFAULT_ORG_ID; }
+  if (typeof organization === 'undefined' ||
+      organization.id === DEFAULT_ORG_ID) {
+    return DEFAULT_ORG_ID;
+  }
   return `${organization.name.toLowerCase()}${organization.id}`;
 }
 
@@ -30,8 +50,8 @@ function addGroup (group, organization) {
   const groupObj = Object.assign({}, group);
   const groupList = organization.groups;
 
-  if (!groupList.length && group.organization.logo) {
-    groupObj.logo = group.organization.logo;
+  if (!groupList.length && organization.logo) {
+    groupObj.logo = organization.logo;
   }
 
   groupList.push(immutable(groupObj));
@@ -48,9 +68,7 @@ function addGroup (group, organization) {
 function organizations (groups) {
   const orgs = {};
   groups.forEach(group => {
-    // Ignore groups with undefined or non-object organizations
-    if (typeof group.organization !== 'object') { return; }
-    const orgId = orgKey(group.organization);
+    const orgId = orgKey(_fetchOrganization(group));
     if (typeof orgs[orgId] === 'undefined') { // First time we've seen this org
       orgs[orgId] = Object.assign({}, group.organization);
       orgs[orgId].groups = []; // Will hold this org's groups

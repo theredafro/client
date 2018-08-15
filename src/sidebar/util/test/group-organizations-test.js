@@ -84,39 +84,21 @@ describe('group-organizations', function () {
 
     });
 
-    it('should omit any groups without an organization', function () {
+    it('should put groups missing organization into default org', function () {
       const org = orgFixtures.organization({ name:'Europium' });
+      const defaultOrg = orgFixtures.defaultOrganization();
       const groups = [
+        { name: 'Zinc', organization: defaultOrg },
         { name: 'Aluminum', organization: org },
-        { name: 'Beryllium', organization: org},
         { name: 'Butane' },
+        { name: 'Acetate', organization: defaultOrg },
         { name: 'Cadmium', organization: org},
       ];
 
       const sortedGroups = groupsByOrganization(groups);
-
-      assert.equal(sortedGroups.length, groups.length - 1);
-      sortedGroups.forEach(group => {
-        assert.notEqual(group.name, 'Butane');
-      });
-    });
-
-    it('should omit any groups with unexpanded organizations', function () {
-      const org = orgFixtures.organization({ name:'Europium' });
-      const groups = [
-        { name: 'Aluminum', organization: org },
-        { name: 'Beryllium', organization: org},
-        { name: 'Butane', organization: 'foobar' },
-        { name: 'Cadmium', organization: org},
-      ];
-
-      const sortedGroups = groupsByOrganization(groups);
-
-      assert.equal(sortedGroups.length, groups.length - 1);
-      sortedGroups.forEach(group => {
-        assert.notEqual(group.name, 'Butane');
-      });
-
+      assert.equal(sortedGroups[2].name, 'Zinc');
+      assert.equal(sortedGroups[3].name, 'Butane');
+      assert.equal(sortedGroups[4].name, 'Acetate');
     });
 
     it ('should omit logo property if not present on organization', function () {
